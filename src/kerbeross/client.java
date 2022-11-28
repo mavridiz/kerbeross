@@ -1,4 +1,6 @@
-public class TGS {
+package kerbeross;
+
+public class client {
 
     public static void main(String[] args) {
 
