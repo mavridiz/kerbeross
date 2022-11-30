@@ -8,7 +8,7 @@ import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
 import java.time.Instant;
 import java.util.Scanner;
-import javax.crypto.BadPaddingException;
+import javax.crypto.BadPaddingException; 
 import javax.crypto.IllegalBlockSizeException;
 import javax.crypto.NoSuchPaddingException;
 import javax.crypto.SecretKey;
@@ -54,6 +54,7 @@ public class client {
             
             //IDc
             comunicator.sendBytes(AS_PORT, message_1_Bytes);
+            System.out.println("Esperando al AS...");
             
             System.out.println("Se envió correctamente el mensaje (1)");
             

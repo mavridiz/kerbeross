@@ -1,7 +1,6 @@
 package kerbeross;
 
 import java.io.IOException;
-import java.io.UnsupportedEncodingException;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.nio.charset.StandardCharsets;
@@ -9,8 +8,6 @@ import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
 import java.time.Instant;
 import java.util.Scanner;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import javax.crypto.BadPaddingException;
 import javax.crypto.IllegalBlockSizeException;
 import javax.crypto.NoSuchPaddingException;
@@ -32,7 +29,8 @@ public class TGS {
         //  Se recibe la Clave del TGS
         byte[] encodedSecretTGS = comunicator.getBytes(ipAuth, AUTH_PORT);
         SecretKey secretTGS = new SecretKeySpec(encodedSecretTGS, 0, encodedSecretTGS.length, "AES");
-
+        System.out.println(encodedSecretTGS.length);
+        
         //  Se recibe la Clave del Client/TGS
         byte[] encodedSecretCTGS = comunicator.getBytes(ipAuth, AUTH_PORT);
         SecretKey secretCTGS = new SecretKeySpec(encodedSecretCTGS, 0, encodedSecretCTGS.length, "AES");
@@ -94,6 +92,7 @@ public class TGS {
         byte[] E_K_C_TGS_message_4_Bytes = cryptor.AESEncryption(secretCTGS, message_4);
 
         comunicator.sendBytes(C_TGS_PORT, E_K_C_TGS_message_4_Bytes);
+        
 
     }
 

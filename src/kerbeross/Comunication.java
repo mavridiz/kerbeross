@@ -11,11 +11,8 @@ public class Comunication {
         try {
             //  Abre un serverSocket, un dataSocket y envia los datos
             ServerSocket socket = new ServerSocket(port);
-            System.out.println("Esperando al receptor...");
-
             Socket dataSocket = socket.accept();
-            System.out.println("Conexion establecida");
-
+            System.out.println("Conexion establecida MF"); 
             dataSocket.getOutputStream().write(message);
             dataSocket.getOutputStream().flush();
             dataSocket.close();
