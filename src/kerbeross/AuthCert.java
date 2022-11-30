@@ -3,8 +3,6 @@ package kerbeross;
 import java.io.IOException;
 import java.net.ServerSocket;
 import java.security.NoSuchAlgorithmException;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import javax.crypto.SecretKey;
 
 public class AuthCert {
