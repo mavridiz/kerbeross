@@ -23,6 +23,8 @@ public class AuthCert {
             ServerSocket ssC_C = new ServerSocket(AUTH_PORT);
             System.out.println("Esperando al Cliente...");
             kd.sendSecretKey(secretC, ssC_C);
+            ServerSocket ssCTGS_C = new ServerSocket(AUTH_PORT);
+            kd.sendSecretKey(secretCTGS, ssCTGS_C);
             System.out.println("Clave enviada al Cliente");
             
             //Clave del Client al AS
@@ -33,6 +35,7 @@ public class AuthCert {
             //Clave del Client/TGS al AS
             ServerSocket ssCTGS_AS = new ServerSocket(AUTH_PORT);
             kd.sendSecretKey(secretCTGS, ssCTGS_AS); 
+            System.out.println("Llave Secreta Client/TGS: "+secretCTGS);
             
             //Clave del TGS al AS
             ServerSocket ssTGS_AS = new ServerSocket(AUTH_PORT);
@@ -59,6 +62,7 @@ public class AuthCert {
             
             //Clave del Client/Servidor al V
             ServerSocket ssCV_V = new ServerSocket(AUTH_PORT);
+            System.out.println("Esperando a V...");
             kd.sendSecretKey(secretCV, ssCV_V);
 
             //Clave del Servidor al V

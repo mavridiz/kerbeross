@@ -23,11 +23,11 @@ public class Comunication {
         }
     }
 
-    public byte[] getBytes(InetAddress ip, int port) throws IOException {
+    public byte[] getBytes(int numBytes, InetAddress ip, int port) throws IOException {
         //  Recibe los datos en bytes
         Socket socket = new Socket(ip, port);
 
-        byte[] data = new byte[128];
+        byte[] data = new byte[numBytes];
         socket.getInputStream().read(data);
         socket.close();
 

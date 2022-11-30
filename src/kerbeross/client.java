@@ -7,6 +7,8 @@ import java.nio.charset.StandardCharsets;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
 import java.time.Instant;
+import java.util.Arrays;
+import java.util.Base64;
 import java.util.Scanner;
 import javax.crypto.BadPaddingException; 
 import javax.crypto.IllegalBlockSizeException;
@@ -33,9 +35,11 @@ public class client {
             InetAddress ipAC = InetAddress.getByName(scanner.nextLine());
 
             //  Se recibe la Clave del Cliente
-            byte[] encodedSecretC = comunicator.getBytes(ipAC, AUTH_PORT);       
+            byte[] encodedSecretC = comunicator.getBytes(16,ipAC, AUTH_PORT);       
             SecretKey secretC = new SecretKeySpec(encodedSecretC, 0, encodedSecretC.length, "AES");
-            
+            byte[] encodedSecretCTGS = comunicator.getBytes(16,ipAC, AUTH_PORT);    
+            SecretKey secretCTGS = new SecretKeySpec(encodedSecretCTGS, 0, encodedSecretCTGS.length, "AES");
+            System.out.println("Llave Secreta Client: "+secretC);
             System.out.println("Claves recibidas y codificadas");
             
             //Manda (1)
@@ -49,29 +53,35 @@ public class client {
             String ts1 = Instant.now().toString();
             
             String[] message_1_Array = {clientID,Str_ipTGS,ts1};
-            String message_1 = message_1_Array.toString();
+            String message_1 = Arrays.toString(message_1_Array);
             byte[] message_1_Bytes = message_1.getBytes("UTF8");
             
             //IDc
-            comunicator.sendBytes(AS_PORT, message_1_Bytes);
             System.out.println("Esperando al AS...");
+            comunicator.sendBytes(AS_PORT, message_1_Bytes);          
             
             System.out.println("Se envió correctamente el mensaje (1)");
             
             //  Recibe (2)
-            byte[] encryptedMessage2 = comunicator.getBytes(ipAC, AS_PORT);
-            byte[] decryptedMessage2 = encryptor.AESDecryption(secretC, encryptedMessage2);
-            
-            String decipheredArray2 = new String(decryptedMessage2, StandardCharsets.UTF_8);
-            String[] decipheredData2 = decipheredArray2.split("||");
+            System.out.println(" ¬ Ingresa la IP del AS: ");
+            InetAddress ipAS = InetAddress.getByName(scanner.nextLine());
+            byte[] Emessage_2_Bytes = comunicator.getBytes(512,ipAS, AS_PORT);
+            System.out.println(Emessage_2_Bytes.length);
+            byte[] trimmed = conv.trim( Emessage_2_Bytes);
+            System.out.println(trimmed.length);
+            byte[] decryptedMessage2 = encryptor.AESDecryption(secretC, trimmed);
+            String message_2 = new String(decryptedMessage2, StandardCharsets.UTF_8).replaceAll("[\\[\\]]", "");
+            System.out.println(message_2);
+            String[] message_2_Array = message_2.split(",");
 
-            Kctgs = decipheredData2[0];
-            byte[] KCTGSBytes= Kctgs.getBytes();
+            Kctgs = message_2_Array[0];
+            System.out.println(Kctgs);
+            byte[] KCTGSBytes = Kctgs.getBytes();
             SecretKey secretKCTGS = new SecretKeySpec(KCTGSBytes, 0, KCTGSBytes.length, "AES");
-            IDtgs = decipheredData2[1];
-            TS2 = decipheredData2[2];
-            lifetime2 = decipheredData2[3];
-            String ticketTGS = decipheredData2[4];
+            IDtgs = message_2_Array[1];
+            TS2 = message_2_Array[2];
+            lifetime2 = message_2_Array[3];
+            String ticketTGS = message_2_Array[4];
             
             System.out.println("Mensaje (2) Recibido");   
             
@@ -88,21 +98,23 @@ public class client {
             //Autentificador
             
             String[] auth_C1_Array = {clientID,Str_ipC,ts3};
-            String auth_C1 = auth_C1_Array.toString();
+            String auth_C1 = Arrays.toString(auth_C1_Array);
 
-            byte[] E_K_CTGS_auth_C1_Bytes = encryptor.AESEncryption(secretKCTGS, auth_C1);
+            byte[] E_K_CTGS_auth_C1_Bytes = encryptor.AESEncryption(secretCTGS, auth_C1);
             String E_K_CTGS_auth_C1 = new String(E_K_CTGS_auth_C1_Bytes, StandardCharsets.UTF_8);
             
             //  Mensaje (3)            
             
             String[] message_3_Array = {Str_ipV,ticketTGS,E_K_CTGS_auth_C1};
-            String message_3 = message_3_Array.toString();
+            String message_3 = Arrays.toString(message_3_Array);
             byte[] message_3_Bytes = message_3.getBytes();
             
+            System.out.println("Esperando al TGS...");
             comunicator.sendBytes(TGS_PORT, message_3_Bytes);
                         
             //Recibe (4)
-            byte[] encryptedMessage4 = comunicator.getBytes(ipTGS, TGS_PORT);
+            System.out.println("4");
+            byte[] encryptedMessage4 = comunicator.getBytes(512,ipTGS, TGS_PORT);
             byte[] decryptedMessage4 = encryptor.AESDecryption(secretKCTGS, encryptedMessage4);
             
             String decipheredArray4 = new String(decryptedMessage4, StandardCharsets.UTF_8);
@@ -120,14 +132,14 @@ public class client {
             String ts5 = Instant.now().toString();
 
             String[] Auth_C2V_Array = {clientID,Str_ipC,ts5};
-            String Auth_C2V = Auth_C2V_Array.toString();
+            String Auth_C2V = Arrays.toString(Auth_C2V_Array);
             
             byte[] K_CV_Auth_C2V_Bytes = encryptor.AESEncryption(secretKCV, Auth_C2V);
             String K_CV_Auth_C2V = new String(K_CV_Auth_C2V_Bytes, StandardCharsets.UTF_8);
             
             //  Mensaje (5)
             String[] message_5_Array = {ticketV,K_CV_Auth_C2V};
-            String message_5 = Auth_C2V_Array.toString();            
+            String message_5 = Arrays.toString(Auth_C2V_Array);            
             byte[] message_5_Bytes = message_5.getBytes();
             
             comunicator.sendBytes(V_PORT, message_5_Bytes);
@@ -135,7 +147,7 @@ public class client {
             System.out.println("Mensaje (5) Enviado");
             
             //Recibe (6)
-            if(comunicator.getBytes(ipV, V_PORT)!=null){
+            if(comunicator.getBytes(512,ipV, V_PORT)!=null){
                 System.out.println("Servicio Concedido y Cliente autentificado!");
             }
             else{

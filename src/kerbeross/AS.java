@@ -6,6 +6,7 @@ import java.nio.charset.StandardCharsets;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
 import java.time.Instant;
+import java.util.Arrays;
 import java.util.Scanner;
 import javax.crypto.BadPaddingException;
 import javax.crypto.IllegalBlockSizeException;
@@ -27,15 +28,16 @@ public class AS {
             InetAddress ipAS = InetAddress.getByName(scanner.nextLine());
 
             //  Se recibe la Clave del Client
-            byte[] encodedSecretC = comunicator.getBytes(ipAS, AUTH_PORT);
+            byte[] encodedSecretC = comunicator.getBytes(16,ipAS, AUTH_PORT);
             SecretKey secretC = new SecretKeySpec(encodedSecretC, 0, encodedSecretC.length, "AES");
-
+            System.out.println("Llave Secreta Client: "+secretC.toString());
+            
             //  Se recibe la Clave del Client/TGS
-            byte[] encodedSecretCTGS = comunicator.getBytes(ipAS, AUTH_PORT);
+            byte[] encodedSecretCTGS = comunicator.getBytes(16,ipAS, AUTH_PORT);
             SecretKey secretCTGS = new SecretKeySpec(encodedSecretCTGS, 0, encodedSecretCTGS.length, "AES");
-
+            System.out.println("Llave Secreta Client/TGS: "+secretCTGS);
             //  Se recibe la Clave del TGS
-            byte[] encodedSecretTGS = comunicator.getBytes(ipAS, AUTH_PORT);
+            byte[] encodedSecretTGS = comunicator.getBytes(16,ipAS, AUTH_PORT);
             SecretKey secretTGS = new SecretKeySpec(encodedSecretTGS, 0, encodedSecretTGS.length, "AES");
 
             System.out.println("Claves recibidas y codificadas");
@@ -51,9 +53,9 @@ public class AS {
             byte[] TGSBytesC = Str_ipTGS.getBytes();
 
             //  Recibe (1)
-            byte[] message_1_Bytes = comunicator.getBytes(ipC, AUTH_PORT);
-            String message_1 = new String(message_1_Bytes, StandardCharsets.UTF_8);
-            String[] message_1_Array = message_1.split("||");
+            byte[] message_1_Bytes = comunicator.getBytes(512,ipC, AS_C_PORT);
+            String message_1 = new String(message_1_Bytes, StandardCharsets.UTF_8).replaceAll("[\\[\\]]", "");;
+            String[] message_1_Array = message_1.split(",");
 
             String ID_C, ID_TGS, TS_1;
 
@@ -66,19 +68,23 @@ public class AS {
             TS_2 = Instant.now().toString();
             LT_2 = "5";
             AD_C = ipC.getHostAddress();
-            K_C_TGS = new String(encodedSecretCTGS, StandardCharsets.UTF_8);
+            K_C_TGS = new String(secretCTGS.getEncoded(), StandardCharsets.UTF_8);
 
             // Se crea E_K_TGS_TICKET_TGS
             String[] ticket_TGS_Array = {K_C_TGS, ID_C, AD_C, ID_TGS, TS_2, LT_2};
-            String ticket_TGS = ticket_TGS_Array.toString();
+            String ticket_TGS = Arrays.toString(ticket_TGS_Array);
             byte[] E_K_TGS_Ticket_TGS_Bytes = cryptor.AESEncryption(secretTGS, ticket_TGS);
             String E_K_TGS_Ticket_TGS = new String(E_K_TGS_Ticket_TGS_Bytes, StandardCharsets.UTF_8);
 
             // Se crea (2)
             String[] message_2_Array = {K_C_TGS, ID_TGS, TS_2, LT_2, E_K_TGS_Ticket_TGS};
-            String message_2 = message_2_Array.toString();
+            String message_2 = Arrays.toString(message_2_Array);
+            System.out.println(K_C_TGS);
             byte[] E_K_C_message_2_Bytes = cryptor.AESEncryption(secretC, message_2);
+            System.out.println(E_K_C_message_2_Bytes.length);
 
+
+            System.out.println("Esperando al Cliente...");
             comunicator.sendBytes(AS_C_PORT, E_K_C_message_2_Bytes);
 
             //  TicketTGS          
